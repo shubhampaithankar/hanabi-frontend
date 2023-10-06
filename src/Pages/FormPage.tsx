@@ -1,49 +1,71 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { User, createOrGetEntry, updateEntry } from '../Services/ApiService';
 
 const FormPage = () => {
 
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
-  const username = params.get('username');
+  const username = params.get('username') as string;
 
-  const [name, setName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [dob, setDob] = useState('');
+  // Use one single state instead of multiple states for inputs
+  const [formData, setFormData] = useState<User>({
+    dateOfBirth: '',
+    email: '',
+    name: '',
+    phoneNumber: '',
+    username
+  });
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    // Save form data or perform any necessary actions
-    console.log('Form submitted:', name, phoneNumber, email, dob);
-    // Navigate to the result page or perform any necessary actions
-    navigate('/result');
+    console.log(formData);
+    const response = await updateEntry(formData);
+    if (response.data.ack === 1) {
+      navigate('/result');
+    }
   };
 
   const handleReset = () => {
     return navigate('/home');
   };
 
-  useEffect(() => {
-    if (!username) {
-      return navigate('/');
-    } else {
-      
+  const getUserData = async (username: string) => {
+    const response = await createOrGetEntry(username);
+    if (response.data.ack === 1) {
+      const { dateOfBirth, email, name, phoneNumber } = response.data.user as User;
+      setFormData((prev: User) => ({
+        ...prev, 
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString().substring(0, 10) : '',
+        email,
+        name,
+        phoneNumber,
+      }));
     }
-  });
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (!username) { // if no username param is found in url, return to homepage
+        return navigate('/');
+      } else {
+        getUserData(username);
+      }
+    })();
+  }, []);
 
   return (
     <section className='d-flex flex-column align-items-center justify-content-center' style={{ minHeight: '100%' }}>
       <form className='form w-25 p-2 border mt-2' onSubmit={handleSubmit}>
-        <h2 className='my-2'>{username}`s details</h2>
+        <h2 className='m-2'>{username}`s details</h2>
         <div className="form-group m-1">
           <label className='m-1' htmlFor="Name">Name</label>
           <input
             className='form-control'
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={formData?.name || ''}
+            onChange={(e) => setFormData((prev: User) => ({ ...prev, name: e.target.value }))}
             placeholder="Enter your Name"
             required
           />
@@ -53,9 +75,10 @@ const FormPage = () => {
           <input
             className='form-control'
             type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            value={formData?.phoneNumber || ''}
+            onChange={(e) => setFormData((prev: User) => ({ ...prev, phoneNumber: Number(e.target.value) }))}
             placeholder="Enter your phone number"
+            maxLength={10}
             required
           />
         </div>
@@ -64,8 +87,8 @@ const FormPage = () => {
           <input
             className='form-control'
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData?.email || ''}
+            onChange={(e) => setFormData((prev: User) => ({ ...prev, email: e.target.value }))}
             placeholder="Enter your email"
             required
           />
@@ -75,8 +98,8 @@ const FormPage = () => {
           <input
             className='form-control'
             type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
+            value={formData?.dateOfBirth || ''}
+            onChange={(e) => setFormData((prev: User) => ({ ...prev, dateOfBirth: e.target.value }))}
             required
           />
         </div>

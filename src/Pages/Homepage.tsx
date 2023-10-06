@@ -20,7 +20,7 @@ const Homepage = () => {
       <h1 className='my-2'>Welcome to the HanabiTech</h1>
       <form className='form w-25 p-2 border mt-2' onSubmit={handleSubmit}>
         <div className="form-group m-1">
-          <label className='m-1' htmlFor="username">Username</label>
+          <label className='my-2 mx-1' htmlFor="username">Username</label>
           <input
             className='form-control'
             type="text"
@@ -30,7 +30,7 @@ const Homepage = () => {
             required
           />
         </div>
-        <div className="btn-group mx-1 my-3 text-center w-100">
+        <div className="mx-1 my-2">
           <button className='btn btn-primary w-25' type="submit">Submit</button>
         </div>
       </form>
